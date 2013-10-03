@@ -1,3 +1,4 @@
+
 # -*- encoding: binary -*-
 require "unicorn/ssl_server"
 
@@ -588,7 +589,6 @@ class Unicorn::HttpServer
     rescue => e
       logger.error(e) rescue nil
       exit!(77)
-    end
   end
 
   # runs inside each forked worker, this sits around and waits

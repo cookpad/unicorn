@@ -1,7 +1,7 @@
 . ./test-lib.sh
 RAILS_VERSION=${RAILS_VERSION-3.0.0}
 case $RUBY_VERSION in
-1.8.7|1.9.2|2.0.0) ;;
+1.8.7|1.9.2) ;;
 *)
 	t_info "RUBY_VERSION=$RUBY_VERSION unsupported for Rails 3"
 	exit 0

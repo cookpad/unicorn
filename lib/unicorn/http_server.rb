@@ -581,6 +581,16 @@ class Unicorn::HttpServer
       exit!(77) # EX_NOPERM in sysexits.h
   end
 
+  def reconnect_rails(worker_nr)
+    logger.info "worker=#{worker_nr} reconnecting rails..."
+    Unicorn::RailsReconnect.reconnect
+    logger.info("worker=#{worker_nr} done reconnecting rails")
+    rescue => e
+      logger.error(e) rescue nil
+      exit!(77)
+    end
+  end
+
   # runs inside each forked worker, this sits around and waits
   # for connections and doesn't die until the parent dies (or is
   # given a INT, QUIT, or TERM signal)
@@ -597,7 +607,10 @@ class Unicorn::HttpServer
     logger.info "worker=#{worker.nr} ready"
 
     begin
-      nr < 0 and reopen_worker_logs(worker.nr)
+      if nr < 0
+        reconnect_rails(worker.nr)
+        reopen_worker_logs(worker.nr)
+      end
       nr = 0
 
       worker.tick = Time.now.to_i

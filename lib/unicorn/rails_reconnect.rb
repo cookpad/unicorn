@@ -1,5 +1,5 @@
 module Unicorn::RailsReconnect
-  def reconnect
+  def self.reconnect
     return unless defined?(Rails)
 
     reconnect_txt = Rails.root.join('tmp', 'reconnect.txt')

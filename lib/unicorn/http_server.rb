@@ -608,7 +608,7 @@ class Unicorn::HttpServer
 
     begin
       if nr < 0
-        #reconnect_rails(worker.nr)
+        reconnect_rails(worker.nr)
         reopen_worker_logs(worker.nr)
       end
       nr = 0

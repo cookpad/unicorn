@@ -23,7 +23,6 @@ pid = fork do
     gem 'kgio-monkey', '0.3.0'
     gem 'kgio', '2.7.2'
     gem 'rack', '1.4.1'
-    gem 'mysql2', '0.3.11'
   end
 end
 _, status = Process.waitpid2(pid)

@@ -583,9 +583,16 @@ class Unicorn::HttpServer
   end
 
   def reconnect_rails(worker_nr)
-    logger.info "worker=#{worker_nr} reconnecting rails..."
-    Unicorn::RailsReconnect.reconnect
-    logger.info("worker=#{worker_nr} done reconnecting rails")
+    return unless defined?(Rails)
+
+    reconnect_txt = Rails.root.join('tmp', 'reconnect.txt')
+
+    if reconnect_txt.exist?
+      logger.info "worker=#{worker_nr} reconnecting rails..."
+      ActiveRecord::Base.clear_all_connections!
+      logger.info("worker=#{worker_nr} done reconnecting rails")
+    end
+
     rescue => e
       logger.error(e) rescue nil
       exit!(77)

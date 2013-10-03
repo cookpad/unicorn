@@ -90,6 +90,8 @@ class Unicorn::HttpServer
   end
   # :stopdoc:
 
+  RECONNECT_TIMEOUT = 60
+
   # Creates a working server on host:port (strange things happen if
   # port isn't a Number).  Use HttpServer::run to start the server and
   # HttpServer.run.join to join the thread that's processing
@@ -251,6 +253,7 @@ class Unicorn::HttpServer
   def join
     respawn = true
     last_check = Time.now
+    usr1_time = nil
 
     proc_name 'master'
     logger.info "master process ready" # test_exec.rb relies on this message
@@ -282,6 +285,7 @@ class Unicorn::HttpServer
         Unicorn::Util.reopen_logs
         logger.info "master done reopening logs"
         kill_each_worker(:USR1)
+        usr1_time = Time.now
       when :USR2 # exec binary, stay alive in case something went wrong
         reexec
       when :WINCH
@@ -308,6 +312,10 @@ class Unicorn::HttpServer
         end
       when :IO
         kill_fattest_worker(:QUIT)
+      end
+      if usr1_time and (Time.now - usr1_time) > RECONNECT_TIMEOUT
+        clean_reconnect_txt
+        usr1_time = nil
       end
     rescue => e
       Unicorn.log_error(@logger, "master loop error", e)
@@ -596,6 +604,18 @@ class Unicorn::HttpServer
     rescue => e
       logger.error(e) rescue nil
       exit!(77)
+  end
+
+  def clean_reconnect_txt
+    return unless defined?(Rails)
+
+    reconnect_txt = Rails.root.join('tmp', 'reconnect.txt')
+
+    if reconnect_txt.exist? and (Time.now - usr1_time) > RECONNECT_TIMEOUT
+      logger.info("master cleaning reconnect.txt...")
+      reconnect_txt.unlink rescue nil
+      logger.info("master done cleaning reconnect.txt...")
+    end
   end
 
   # runs inside each forked worker, this sits around and waits

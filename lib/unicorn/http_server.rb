@@ -584,7 +584,7 @@ class Unicorn::HttpServer
   def call_after_usr1(worker)
     logger.info "worker=#{worker.nr} processing after_usr1..."
     after_usr1.call(worker)
-    logger.info("worker=#{worker,nr} done processing after_usr1")
+    logger.info "worker=#{worker.nr} done processing after_usr1"
     rescue => e
       logger.error(e) rescue nil
       exit!(77)

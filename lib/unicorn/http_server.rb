@@ -16,7 +16,7 @@ class Unicorn::HttpServer
                 :before_fork, :after_fork, :before_exec,
                 :listener_opts, :preload_app,
                 :reexec_pid, :orig_app, :init_listeners,
-                :master_pid, :config, :ready_pipe, :user
+                :master_pid, :config, :ready_pipe, :user, :after_usr1
   attr_reader :pid, :logger
   include Unicorn::SocketHelper
   include Unicorn::HttpResponse
@@ -581,17 +581,10 @@ class Unicorn::HttpServer
       exit!(77) # EX_NOPERM in sysexits.h
   end
 
-  def reconnect_rails(worker_nr)
-    return unless defined?(Rails)
-
-    reconnect_txt = Rails.root.join('tmp', 'reconnect.txt')
-
-    if reconnect_txt.exist?
-      logger.info "worker=#{worker_nr} reconnecting rails..."
-      ActiveRecord::Base.clear_all_connections!
-      logger.info("worker=#{worker_nr} done reconnecting rails")
-    end
-
+  def call_after_usr1(worker)
+    logger.info "worker=#{worker.nr} processing after_usr1..."
+    after_usr1.call(worker)
+    logger.info("worker=#{worker,nr} done processing after_usr1")
     rescue => e
       logger.error(e) rescue nil
       exit!(77)
@@ -614,7 +607,7 @@ class Unicorn::HttpServer
 
     begin
       if nr < 0
-        reconnect_rails(worker.nr)
+        call_after_usr1(worker)
         reopen_worker_logs(worker.nr)
       end
       nr = 0

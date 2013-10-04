@@ -49,6 +49,7 @@ class Unicorn::Configurator
     :rewindable_input => true, # for Rack 2.x: (Rack::VERSION[0] <= 1),
     :client_body_buffer_size => Unicorn::Const::MAX_BODY,
     :trust_x_forwarded => true,
+    :after_usr1 => lambda { |worker| },
   }
   #:startdoc:
 
@@ -547,6 +548,10 @@ class Unicorn::Configurator
     else
       address
     end
+  end
+
+  def after_usr1(*args, &block)
+    set_hook(:after_usr1, block_given? ? block : args[0])
   end
 
 private

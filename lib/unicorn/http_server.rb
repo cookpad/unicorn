@@ -1,4 +1,3 @@
-
 # -*- encoding: binary -*-
 require "unicorn/ssl_server"
 

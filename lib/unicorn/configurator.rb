@@ -551,7 +551,7 @@ class Unicorn::Configurator
   end
 
   def after_usr1(*args, &block)
-    set_hook(:after_usr1, block_given? ? block : args[0])
+    set_hook(:after_usr1, block_given? ? block : args[0], 1)
   end
 
 private

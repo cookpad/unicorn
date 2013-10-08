@@ -16,7 +16,7 @@ class Unicorn::HttpServer
                 :before_fork, :after_fork, :before_exec,
                 :listener_opts, :preload_app,
                 :reexec_pid, :orig_app, :init_listeners,
-                :master_pid, :config, :ready_pipe, :user
+                :master_pid, :config, :ready_pipe, :user, :after_usr1
   attr_reader :pid, :logger
   include Unicorn::SocketHelper
   include Unicorn::HttpResponse
@@ -581,6 +581,15 @@ class Unicorn::HttpServer
       exit!(77) # EX_NOPERM in sysexits.h
   end
 
+  def call_after_usr1(worker)
+    logger.info "worker=#{worker.nr} processing after_usr1..."
+    after_usr1.call(worker)
+    logger.info "worker=#{worker.nr} done processing after_usr1"
+    rescue => e
+      logger.error(e) rescue nil
+      exit!(77)
+  end
+
   # runs inside each forked worker, this sits around and waits
   # for connections and doesn't die until the parent dies (or is
   # given a INT, QUIT, or TERM signal)
@@ -597,7 +606,10 @@ class Unicorn::HttpServer
     logger.info "worker=#{worker.nr} ready"
 
     begin
-      nr < 0 and reopen_worker_logs(worker.nr)
+      if nr < 0
+        call_after_usr1(worker)
+        reopen_worker_logs(worker.nr)
+      end
       nr = 0
 
       worker.tick = Time.now.to_i
